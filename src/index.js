@@ -1,7 +1,6 @@
-import Cell from './cell';
 import * as p5 from './p5';
 import {States} from "./states";
-import CellMatrix from "./matrix";
+import CellMatrix from "./CellMatrix";
 
 let s = (sk) => {
 
@@ -16,7 +15,6 @@ let s = (sk) => {
 
     sk.setup = () => {
         sk.createCanvas(1000, 720);
-        sk.background(153);
 
         matrix.initMatrix(cellSize);
 
@@ -26,7 +24,7 @@ let s = (sk) => {
             return Math.floor(Math.random() * 10) > 5 ? States.DEAD : States.ALIVE;
         }
 
-        sk.frameRate(2);
+        sk.frameRate(1);
         sk.colorMode(sk.RGB);
     }
 
@@ -34,11 +32,8 @@ let s = (sk) => {
     sk.draw = () => {
         turn++;
         console.log("TURN " + turn);
-        drawBoard()
-
-        if (turn == 1) {
-            sk.noLoop();
-        }
+        drawBoard();
+        advance_game();
     }
 
     function drawBoard() {
@@ -49,10 +44,27 @@ let s = (sk) => {
             if (state === States.DEAD) {
                 sk.fill(255, 255, 255);
             } else if (state === States.ALIVE) {
-                sk.fill(0,0,0);
+                sk.fill(0, 0, 0);
             }
             sk.square(cell.getX(), cell.getY(), cell.getSize());
         })
+    }
+
+    function advance_game() {
+        let newMatrix = new CellMatrix(matrix.getRows(), matrix.getColumns())
+        newMatrix.initMatrix(cellSize)
+
+        matrix.eachWithIndexs((cell, i, j) => {
+            let neighbours = matrix.aliveNeighbours(i, j);
+            if (cell.getState() === States.ALIVE) {
+                if (neighbours === 2 || neighbours === 3)
+                    newMatrix.get(i, j).setState(States.ALIVE);
+            } else {
+                if (neighbours === 3)
+                    newMatrix.get(i, j).setState(States.ALIVE);
+            }
+        })
+        matrix = newMatrix;
     }
 }
 
